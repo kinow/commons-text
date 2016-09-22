@@ -20,13 +20,13 @@ import java.io.UnsupportedEncodingException;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 /**
@@ -81,8 +81,8 @@ public class AlphabetConverter {
     private AlphabetConverter(Map<Integer, String> originalToEncoded, Map<String, String> encodedToOriginal,
             Map<Integer, String> doNotEncodeMap, int encodedLetterLength) {
 
-        this.originalToEncoded = new ConcurrentHashMap<>(originalToEncoded);
-        this.encodedToOriginal = new ConcurrentHashMap<>(encodedToOriginal);
+        this.originalToEncoded = originalToEncoded;
+        this.encodedToOriginal = encodedToOriginal;
         this.encodedLetterLength = encodedLetterLength;
     }
 
@@ -90,7 +90,7 @@ public class AlphabetConverter {
      * Encode a given string.
      *
      * @param original the string to be encoded
-     * @return the encoded string
+     * @return the encoded string, {@code null} if the given string is null
      * @throws UnsupportedEncodingException if chars that are not supported are encountered
      */
     public String encode(String original) throws UnsupportedEncodingException {
@@ -122,10 +122,14 @@ public class AlphabetConverter {
      * Decodes a given string
      *
      * @param encoded a string that has been encoded using this AlphabetConverter
-     * @return the decoded string such that AlphabetConverter.encode() will return encoded
+     * @return the decoded string, {@code null} if the given string is null
      * @throws UnsupportedEncodingException if unexpected characters that cannot be handled are encountered
      */
     public String decode(String encoded) throws UnsupportedEncodingException {
+        if (encoded == null) {
+            return null;
+        }
+
         StringBuilder result = new StringBuilder();
 
         for (int j = 0; j < encoded.length();) {
@@ -321,20 +325,24 @@ public class AlphabetConverter {
     public static AlphabetConverter createConverter(Set<Integer> original, Set<Integer> encoding,
             Set<Integer> doNotEncode) {
 
+        Set<Integer> originalCopy = Collections.unmodifiableSet(original);
+        Set<Integer> encodingCopy = new HashSet<>(encoding);
+        Set<Integer> doNotEncodeCopy = Collections.unmodifiableSet(doNotEncode);
+
         final Map<Integer, String> originalToEncoded = new LinkedHashMap<>();
         final Map<String, String> encodedToOriginal = new LinkedHashMap<>();
         final Map<Integer, String> doNotEncodeMap = new HashMap<>();
 
         int encodedLetterLength;
 
-        for (int i : doNotEncode) {
-            if (!original.contains(i)) {
+        for (int i : doNotEncodeCopy) {
+            if (!originalCopy.contains(i)) {
                 throw new IllegalArgumentException(
                         "Can not use 'do not encode' list because original alphabet does not contain '"
                                 + codePointToString(i) + "'");
             }
 
-            if (!encoding.contains(i)) {
+            if (!encodingCopy.contains(i)) {
                 throw new IllegalArgumentException(
                         "Can not use 'do not encode' list because encoding alphabet does not contain '"
                                 + codePointToString(i) + "'");
@@ -343,12 +351,12 @@ public class AlphabetConverter {
             doNotEncodeMap.put(i, codePointToString(i));
         }
 
-        if (encoding.size() >= original.size()) {
+        if (encodingCopy.size() >= originalCopy.size()) {
             encodedLetterLength = 1;
 
-            Iterator<Integer> it = encoding.iterator();
+            Iterator<Integer> it = encodingCopy.iterator();
 
-            for (int originalLetter : original) {
+            for (int originalLetter : originalCopy) {
                 String originalLetterAsString = codePointToString(originalLetter);
 
                 if (doNotEncodeMap.containsKey(originalLetter)) {
@@ -357,7 +365,7 @@ public class AlphabetConverter {
                 } else {
                     Integer next = it.next();
 
-                    while (doNotEncode.contains(next)) {
+                    while (doNotEncodeCopy.contains(next)) {
                         next = it.next();
                     }
 
@@ -370,10 +378,10 @@ public class AlphabetConverter {
 
             return new AlphabetConverter(originalToEncoded, encodedToOriginal, doNotEncodeMap, encodedLetterLength);
 
-        } else if (encoding.size() - doNotEncode.size() < 2) {
+        } else if (encodingCopy.size() - doNotEncodeCopy.size() < 2) {
             throw new IllegalArgumentException(
                     "Must have at least two encoding characters (not counting those in the 'do not encode' list), but has  "
-                            + (encoding.size() - doNotEncode.size()));
+                            + (encodingCopy.size() - doNotEncodeCopy.size()));
         } else {
             // we start with one which is our minimum, and because we do the
             // first division outside the loop
@@ -381,10 +389,10 @@ public class AlphabetConverter {
 
             // the first division takes into account that the doNotEncode
             // letters can't be in the leftmost place
-            int lettersLeft = (original.size() - doNotEncode.size()) / (encoding.size() - doNotEncode.size());
+            int lettersLeft = (originalCopy.size() - doNotEncodeCopy.size()) / (encodingCopy.size() - doNotEncodeCopy.size());
 
-            while (lettersLeft / encoding.size() >= 1) {
-                lettersLeft = lettersLeft / encoding.size();
+            while (lettersLeft / encodingCopy.size() >= 1) {
+                lettersLeft = lettersLeft / encodingCopy.size();
                 lettersSoFar++;
             }
 
@@ -393,7 +401,7 @@ public class AlphabetConverter {
             AlphabetConverter ac = new AlphabetConverter(originalToEncoded, encodedToOriginal, doNotEncodeMap,
                     encodedLetterLength);
 
-            ac.addSingleEncoding(encodedLetterLength, "", encoding, original.iterator(), doNotEncodeMap);
+            ac.addSingleEncoding(encodedLetterLength, "", encodingCopy, originalCopy.iterator(), doNotEncodeMap);
 
             return ac;
         }
