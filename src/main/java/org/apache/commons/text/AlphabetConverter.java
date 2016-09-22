@@ -119,6 +119,43 @@ public class AlphabetConverter {
     }
 
     /**
+     * Decodes a given string
+     *
+     * @param encoded a string that has been encoded using this AlphabetConverter
+     * @return the decoded string such that AlphabetConverter.encode() will return encoded
+     * @throws UnsupportedEncodingException if unexpected characters that cannot be handled are encountered
+     */
+    public String decode(String encoded) throws UnsupportedEncodingException {
+        StringBuilder result = new StringBuilder();
+
+        for (int j = 0; j < encoded.length();) {
+            Integer i = encoded.codePointAt(j);
+            String s = codePointToString(i);
+
+            if (s.equals(originalToEncoded.get(i))) {
+                result.append(s);
+                j++; // because we do not encode in Unicode extended the length of each encoded char is 1
+            } else {
+                if (j + encodedLetterLength > encoded.length()) {
+                    throw new UnsupportedEncodingException("Unexpected end of string while decoding " + encoded);
+                } else {
+                    String nextGroup = encoded.substring(j, j + encodedLetterLength);
+                    String next = encodedToOriginal.get(nextGroup);
+                    if (next == null) {
+                        throw new UnsupportedEncodingException(
+                                "Unexpected string without decoding (" + nextGroup + ") in " + encoded);
+                    } else {
+                        result.append(next);
+                        j += encodedLetterLength;
+                    }
+                }
+            }
+        }
+
+        return result.toString();
+    }
+
+    /**
      * Get the length of characters in the encoded alphabet that are necessaryfor each character in the original
      * alphabet.
      *
@@ -136,6 +173,49 @@ public class AlphabetConverter {
      */
     public Map<Integer, String> getOriginalToEncoded() {
         return Collections.unmodifiableMap(originalToEncoded);
+    }
+
+    /**
+     * Recursive method used when creating encoder/decoder
+     */
+    private void addSingleEncoding(int level, String currentEncoding, Collection<Integer> encoding,
+            Iterator<Integer> originals, Map<Integer, String> doNotEncodeMap) {
+
+        if (level > 0) {
+            for (int encodingLetter : encoding) {
+                if (originals.hasNext()) {
+
+                    // this skips the doNotEncode chars if they are in the
+                    // leftmost place
+                    if (level != encodedLetterLength || !doNotEncodeMap.containsKey(encodingLetter)) {
+                        addSingleEncoding(level - 1, currentEncoding + codePointToString(encodingLetter), encoding,
+                                originals, doNotEncodeMap);
+                    }
+                } else {
+                    return; // done encoding all the original alphabet
+                }
+            }
+        } else {
+            Integer next = originals.next();
+
+            while (doNotEncodeMap.containsKey(next)) {
+                String originalLetterAsString = codePointToString(next);
+
+                originalToEncoded.put(next, originalLetterAsString);
+                encodedToOriginal.put(originalLetterAsString, originalLetterAsString);
+
+                if (!originals.hasNext()) {
+                    return;
+                }
+
+                next = originals.next();
+            }
+
+            String originalLetterAsString = codePointToString(next);
+
+            originalToEncoded.put(next, currentEncoding);
+            encodedToOriginal.put(currentEncoding, originalLetterAsString);
+        }
     }
 
     @Override
@@ -316,86 +396,6 @@ public class AlphabetConverter {
             ac.addSingleEncoding(encodedLetterLength, "", encoding, original.iterator(), doNotEncodeMap);
 
             return ac;
-        }
-    }
-
-    /**
-     * Decodes a given string
-     *
-     * @param encoded a string that has been encoded using this AlphabetConverter
-     * @return the decoded string such that AlphabetConverter.encode() will return encoded
-     * @throws UnsupportedEncodingException if unexpected characters that cannot be handled are encountered
-     */
-    public String decode(String encoded) throws UnsupportedEncodingException {
-        StringBuilder result = new StringBuilder();
-
-        for (int j = 0; j < encoded.length();) {
-            Integer i = encoded.codePointAt(j);
-            String s = codePointToString(i);
-
-            if (s.equals(originalToEncoded.get(i))) {
-                result.append(s);
-                j++; // because we do not encode in Unicode extended the length of each encoded char is 1
-            } else {
-                if (j + encodedLetterLength > encoded.length()) {
-                    throw new UnsupportedEncodingException("Unexpected end of string while decoding " + encoded);
-                } else {
-                    String nextGroup = encoded.substring(j, j + encodedLetterLength);
-                    String next = encodedToOriginal.get(nextGroup);
-                    if (next == null) {
-                        throw new UnsupportedEncodingException(
-                                "Unexpected string without decoding (" + nextGroup + ") in " + encoded);
-                    } else {
-                        result.append(next);
-                        j += encodedLetterLength;
-                    }
-                }
-            }
-        }
-
-        return result.toString();
-    }
-
-    /**
-     * Recursive method used when creating encoder/decoder
-     */
-    private void addSingleEncoding(int level, String currentEncoding, Collection<Integer> encoding,
-            Iterator<Integer> originals, Map<Integer, String> doNotEncodeMap) {
-
-        if (level > 0) {
-            for (int encodingLetter : encoding) {
-                if (originals.hasNext()) {
-
-                    // this skips the doNotEncode chars if they are in the
-                    // leftmost place
-                    if (level != encodedLetterLength || !doNotEncodeMap.containsKey(encodingLetter)) {
-                        addSingleEncoding(level - 1, currentEncoding + codePointToString(encodingLetter), encoding,
-                                originals, doNotEncodeMap);
-                    }
-                } else {
-                    return; // done encoding all the original alphabet
-                }
-            }
-        } else {
-            Integer next = originals.next();
-
-            while (doNotEncodeMap.containsKey(next)) {
-                String originalLetterAsString = codePointToString(next);
-
-                originalToEncoded.put(next, originalLetterAsString);
-                encodedToOriginal.put(originalLetterAsString, originalLetterAsString);
-
-                if (!originals.hasNext()) {
-                    return;
-                }
-
-                next = originals.next();
-            }
-
-            String originalLetterAsString = codePointToString(next);
-
-            originalToEncoded.put(next, currentEncoding);
-            encodedToOriginal.put(currentEncoding, originalLetterAsString);
         }
     }
 
