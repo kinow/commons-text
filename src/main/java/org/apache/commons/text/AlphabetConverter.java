@@ -17,6 +17,7 @@
 package org.apache.commons.text;
 
 import java.io.UnsupportedEncodingException;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -27,7 +28,6 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 /**
  * <p>
@@ -57,6 +57,8 @@ import java.util.stream.Collectors;
  * ac.encode("d"); // d
  * ac.encode("abcd"); // 00010dd
  * </pre>
+ *
+ * <p>#ThreadSafe# as static factory methods receive arrays, or a map which is copied as an unmodifiable map.</p>
  *
  * @since 0.1
  */
@@ -291,23 +293,27 @@ public class AlphabetConverter {
      * Create an alphabet converter, for converting from the original alphabet, to the encoded alphabet, while leaving
      * the characters in <em>doNotEncode</em> as they are (if possible).
      *
-     * @param original a Set of chars representing the original alphabet
-     * @param encoding a Set of chars representing the alphabet to be used for encoding
-     * @param doNotEncode a Set of chars to be encoded using the original alphabet - every char here must appear in both
-     *            the previous params
+     * @param original an array of chars representing the original alphabet
+     * @param encoding an array of chars representing the alphabet to be used for encoding
+     * @param doNotEncode an array of chars to be encoded using the original alphabet - every char here must appear in
+     *            both the previous params
      * @return the AlphabetConverter
      * @throws IllegalArgumentException if an AlphabetConverter cannot be constructed
      */
-    public static AlphabetConverter createConverterFromChars(Set<Character> original, Set<Character> encoding,
-            Set<Character> doNotEncode) {
+    public static AlphabetConverter createConverterFromChars(Character[] original, Character[] encoding,
+            Character[] doNotEncode) {
         return AlphabetConverter.createConverter(convertCharsToIntegers(original), convertCharsToIntegers(encoding),
                 convertCharsToIntegers(doNotEncode));
     }
 
-    private static Set<Integer> convertCharsToIntegers(Set<Character> chars) {
-        Set<Integer> integers = chars.stream().map(c -> {
-            return (int) c;
-        }).collect(Collectors.toSet());
+    private static Integer[] convertCharsToIntegers(Character[] chars) {
+        if (chars == null || chars.length == 0) {
+            return new Integer[0];
+        }
+        Integer[] integers = new Integer[chars.length];
+        for (int i = 0; i < chars.length; i++) {
+            integers[i] = (int) chars[i];
+        }
         return integers;
     }
 
@@ -315,19 +321,18 @@ public class AlphabetConverter {
      * Create an alphabet converter, for converting from the original alphabet, to the encoded alphabet, while leaving
      * the characters in <em>doNotEncode</em> as they are (if possible)
      *
-     * @param original a Set of ints representing the original alphabet in codepoints
-     * @param encoding a Set of ints representing the alphabet to be used for encoding, in codepoints
-     * @param doNotEncode a Set of ints representing the chars to be encoded using the original alphabet - every char
+     * @param original an array of ints representing the original alphabet in codepoints
+     * @param encoding an array of ints representing the alphabet to be used for encoding, in codepoints
+     * @param doNotEncode an array of ints representing the chars to be encoded using the original alphabet - every char
      *            here must appear in both the previous params
      * @return the AlphabetConverter
      * @throws IllegalArgumentException if an AlphabetConverter cannot be constructed
      */
-    public static AlphabetConverter createConverter(Set<Integer> original, Set<Integer> encoding,
-            Set<Integer> doNotEncode) {
+    public static AlphabetConverter createConverter(Integer[] original, Integer[] encoding, Integer[] doNotEncode) {
 
-        Set<Integer> originalCopy = Collections.unmodifiableSet(original);
-        Set<Integer> encodingCopy = new HashSet<>(encoding);
-        Set<Integer> doNotEncodeCopy = Collections.unmodifiableSet(doNotEncode);
+        Set<Integer> originalCopy = new HashSet<>(Arrays.<Integer> asList(original));
+        Set<Integer> encodingCopy = new HashSet<>(Arrays.<Integer> asList(encoding));
+        Set<Integer> doNotEncodeCopy = new HashSet<>(Arrays.<Integer> asList(doNotEncode));
 
         final Map<Integer, String> originalToEncoded = new LinkedHashMap<>();
         final Map<String, String> encodedToOriginal = new LinkedHashMap<>();
@@ -389,7 +394,8 @@ public class AlphabetConverter {
 
             // the first division takes into account that the doNotEncode
             // letters can't be in the leftmost place
-            int lettersLeft = (originalCopy.size() - doNotEncodeCopy.size()) / (encodingCopy.size() - doNotEncodeCopy.size());
+            int lettersLeft = (originalCopy.size() - doNotEncodeCopy.size())
+                    / (encodingCopy.size() - doNotEncodeCopy.size());
 
             while (lettersLeft / encodingCopy.size() >= 1) {
                 lettersLeft = lettersLeft / encodingCopy.size();
