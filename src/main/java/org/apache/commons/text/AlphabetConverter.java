@@ -45,11 +45,11 @@ import java.util.Set;
  * <h3>Sample usage</h3>
  *
  * <pre>
- * Set<Character> originals; // a, b, c, d
- * Set<Character> encoding; // 0, 1, d
- * Set<Character> doNotEncode; // d
+ * Character[] originals; // a, b, c, d
+ * Character[] encoding; // 0, 1, d
+ * Character[] doNotEncode; // d
  *
- * AlphabetConverter ac = AlphabetConverter.createConverter(originals, encoding, doNotEncode);
+ * AlphabetConverter ac = AlphabetConverter.createConverterFromChars(originals, encoding, doNotEncode);
  *
  * ac.encode("a"); // 00
  * ac.encode("b"); // 01
