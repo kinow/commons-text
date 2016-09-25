@@ -58,7 +58,9 @@ import java.util.Set;
  * ac.encode("abcd"); // 00010dd
  * </pre>
  *
- * <p>#ThreadSafe# as static factory methods receive arrays, or a map which is copied as an unmodifiable map.</p>
+ * <p>
+ * #ThreadSafe# as static factory methods receive arrays, or a map which is copied as an unmodifiable map.
+ * </p>
  *
  * @since 0.1
  */
@@ -228,9 +230,9 @@ public class AlphabetConverter {
     public String toString() {
         StringBuilder sb = new StringBuilder();
 
-        originalToEncoded.forEach((key, value) -> {
-            sb.append(codePointToString(key)).append(ARROW).append(value).append(LINE_SEPARATOR);
-        });
+        for (Entry<Integer, String> entry : originalToEncoded.entrySet()) {
+            sb.append(codePointToString(entry.getKey())).append(ARROW).append(entry.getValue()).append(LINE_SEPARATOR);
+        }
 
         return sb.toString();
     }
