@@ -75,7 +75,7 @@ public class HumanNameParserTest {
 
         long recordNum = record.getRecordNumber();
 
-        assertThat("Wrong LeadingInit in record " + recordNum,
+        assertThat("Wrong Salutation in record " + recordNum,
                 result.getSalutation(), equalTo(record.get(Columns.Salutation)));
 
         assertThat("Wrong LeadingInit in record " + recordNum,
