@@ -135,7 +135,7 @@ public final class HumanNameParser {
 
         NameString nameString = new NameString(name);
         // TODO compile regexes only once when the parser is created
-        String salutations = StringUtils.join(this.salutations, " |") + "";
+        String salutations = StringUtils.join(this.salutations, " |") + " ";
         String suffixes = StringUtils.join(this.suffixes, "\\.*|") + "\\.*";
         String prefixes = StringUtils.join(this.prefixes, " |") + " ";
 
