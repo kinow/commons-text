@@ -15,13 +15,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.commons.text.names;
+package org.apache.commons.text.names.parser;
 
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.text.names.Name;
+import org.apache.commons.text.names.NameString;
 
 /**
  * A parser capable of parsing name parts out of a single string.
@@ -98,7 +100,7 @@ import org.apache.commons.lang3.StringUtils;
  *
  * <p>This class is immutable.</p>
  */
-public final class HumanNameParser {
+public final class HumanNameParserImpl {
 
     /**
      * List of suffixes. Not exposed to users or children classes.
@@ -116,7 +118,7 @@ public final class HumanNameParser {
     /**
      * Creates a new parser.
      */
-    public HumanNameParser() {
+    public HumanNameParserImpl() {
         // TODO make this configurable
         this.salutations = Arrays.asList(
                 "mr",  "mrs", "ms", "miss", "dr"

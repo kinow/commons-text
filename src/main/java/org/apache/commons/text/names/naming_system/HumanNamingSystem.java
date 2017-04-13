@@ -1,5 +1,4 @@
 /*
-/*
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -15,8 +14,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.commons.text.names;
+package org.apache.commons.text.names.naming_system;
 
-public interface HumanName {
+import java.util.List;
+
+/**
+ * Represent a human naming system.
+ */
+public interface HumanNamingSystem {
+
+    HumanNamingSystem withSalutations(List<String> salutations);
+
+    HumanNamingSystem withSuffixes(List<String> suffixes);
+
+    HumanNamingSystem withPrefixes(List<String> prefixes);
 
 }

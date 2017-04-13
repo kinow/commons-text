@@ -19,6 +19,8 @@ package org.apache.commons.text.names;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.apache.commons.text.names.parser.NameParseException;
+
 /**
  * A wrapper around a String representing a Name to parse. Contains the logic
  * for handling executing Regexes on the wrapped name string.

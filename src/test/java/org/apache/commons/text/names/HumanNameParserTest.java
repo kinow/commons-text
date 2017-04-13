@@ -24,6 +24,7 @@ import java.nio.charset.Charset;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
+import org.apache.commons.text.names.parser.HumanNameParserImpl;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -34,7 +35,7 @@ import org.junit.Test;
 public class HumanNameParserTest {
 
     private CSVParser inputParser;
-    private HumanNameParser nameParser;
+    private HumanNameParserImpl nameParser;
 
     @Before
     public void setUp() throws Exception {
@@ -42,7 +43,7 @@ public class HumanNameParserTest {
                 HumanNameParserTest.class.getResource("testNames.txt"), 
                 Charset.forName("UTF-8"), 
                 CSVFormat.DEFAULT.withDelimiter('|').withHeader());
-        nameParser = new HumanNameParser();
+        nameParser = new HumanNameParserImpl();
     }
 
     @After
